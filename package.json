@@ -1,6 +1,6 @@
 {
   "name": "artificialspoken",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Artifical Spoken Language (人造語)",
   "main": "lib/artificialspoken.js",
   "dependencies": {
