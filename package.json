@@ -1,0 +1,42 @@
+{
+  "name": "artificialspoken",
+  "version": "0.0.1",
+  "description": "Artifical Spoken Language (人造語)",
+  "main": "lib/artificialspoken.js",
+  "dependencies": {
+    "chinese_convert": "^1.0.8",
+    "mdo": "^1.0.4",
+    "pinyin.js": "^2.0.0"
+  },
+  "devDependencies": {
+    "koa": "^2.2.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.0.1",
+    "koa-send": "^3.3.0",
+    "koa-static": "^3.0.0",
+    "chinese-conv": "^1.0.1",
+    "mocha": "^3.1.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "bin": {},
+  "keywords": [
+    "chinese",
+    "english",
+    "convert",
+    "BNF",
+    "translation",
+    "langugage"
+  ],
+  "homepage": "https://github.com/ArtificialSpokenFoundation/artificialspoken.git",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ArtificialSpokenFoundation/artificialspoken.git"
+  },
+  "author": {
+    "name": "Chung-Chen Chen",
+    "email": "ccckmit@gmail.com"
+  },
+  "license": "SEE LICENSE IN LICENSE"
+}

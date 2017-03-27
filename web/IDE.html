@@ -1,0 +1,162 @@
+<html>
+<head>
+<style>
+html, body, div {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  vertical-align: baseline;
+  font-family: 'Tahoma', 'Pmingliu';
+}
+div, textarea { float: left; }
+#watch  { overflow:auto; margin:10px; padding:10px; width:95%; height:20vh; display:"inline"; border:dotted #336699 1px; line-height:400%;  }
+#source { font-size:1.2em; margin:10px; padding:10px; padding:10px; width:100%; height:57vh; display:"inline"; line-height:200%; color:#3f3f3f }
+#target { overflow:auto; margin:10px; padding:10px; width:95%; height:80vh; display:"inline"; border:dotted #336699 1px; line-height:400%;  }
+button, input { margin:10px; padding:10px; }
+ruby { color:#3f3f3f; }
+rt { font-size:1em; color:#336699; padding:10px 0 10px 0; letter-spacing: 0px;  };
+em { color:red }
+.tag { color:#bb66aa; position: relative; top: 1em; left: -1em; font-size: 0.8em;}
+#watch .cut { color:#cfcfcf; position: relative; top: 1em; left: -1em; font-size: 0.8em;}
+#target .cut  { color:#cfcfcf; position: relative; font-size: 0.8em;}
+.header { background-color:black; width:100%; height:2em; color:white; font-family:標楷體; font-size:1.5em; padding:10px 10px 0px 10px }
+</style>
+</head>
+<body>
+<title>人造語 IDE</title>
+<div class="header">人造語 IDE
+<!--
+ <input id="c2eRadio" name="mtType" type="radio" checked>中翻英 
+ <input id="e2cRadio" name="mtType" type="radio">英翻中
+-->
+</div>
+
+<table width="98%">
+<tr>
+  <td width="50%">
+    <div id="watch"></div>
+<textarea id="source">
+天國來的鈔票 - (1)
+這是一個信仰虔誠的國家，人們打從心裡相信國王是天神的代理人，也是人類與天神之間唯一的溝通管道。
+當然、這也是一個政教合一個國家，所有的國民都信仰同一種宗教，祭拜同一位神明，至高無上的天神《 法拉:N 》。
+在這個國家裏，大家與我們一樣，也都使用紙鈔，人們每天買東西都會隨身帶一些鈔票出去，需要的時候就拿出來用。
+但是，沒有人知道這些鈔票是從哪裡來的，也很少人會去思考這樣的問題。但是，好奇的小孩總是會問到這個問題。
+沒有人刻意去回答這樣的問題，但是許多人打從心理相信，鈔票來自天國，是天神給予人們的禮物之一，讓大家都可以用來買到想要的東西。
+</textarea>
+  </td>
+  <td width="50%"><div id="target"></div></td>
+</tr>
+</table>
+<!-- <script src="mt.js"></script> -->
+<script>
+var sourceBox = document.getElementById("source");
+var targetBox = document.getElementById("target");
+var watchBox  = document.getElementById("watch");
+
+function ajaxPost (path, msg, callback) {
+  var r = new window.XMLHttpRequest()
+  r.open('POST', path, true)
+  r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+  r.onreadystatechange = function () {
+    if (r.readyState !== 4) return
+//  window.alert(r.responseText)
+    if (typeof callback !== 'undefined') callback(r)
+  }
+  r.send(msg)
+}
+
+function asl(source, fields, callback) {
+  ajaxPost ('/asl', 'source='+source, function(r) {
+    var p = JSON.parse(r.responseText)
+    var toTags = [ '<ruby>' ];
+    for (var i=0; i<p.tokens.length; i++) {
+      if (p.tokens[i] === '↓')
+        toTags.push('</ruby><br/><ruby>')
+      else {
+        var values = [], tags = []
+        if (fields.indexOf('en') >=0) values.push(p.en[i])
+        if (fields.indexOf('tag') >=0) tags.push('<sub class="tag">' + p.tags[i] + '</sub>')
+//        if (fields.indexOf('tag') >=0) values.push(p.tags[i])
+        toTags.push('&nbsp;'+p.tokens[i] +
+          tags.join('')+
+          '<sub class="cut">' + p.cuts[i] + '</sub>' + 
+          '<rp>(</rp><rt>&nbsp;'+ values.join(':') + '</rt><rp>)</rp>');
+      }
+    }
+    toTags.push('</ruby>');
+    callback(toTags.join(' '))
+  })
+}
+
+function doMt() {
+  asl(sourceBox.value, ['en'], function(html) {
+    targetBox.innerHTML = html
+  })
+}
+
+function parse(text) {
+  asl(text, ['en', 'tag'], function(html) {
+    watchBox.innerHTML = html
+  })
+}
+
+window.onload = function() {
+  doMt();
+	sourceBox.addEventListener("keyup", function(event) {
+		event.preventDefault();
+    if (event.keyCode === 13)
+      doMt();
+	});
+  sourceBox.focus()
+}
+
+function cursorMove(box) {
+  var pos = box.selectionStart;
+  var text = " "+box.value;
+  for (var i=pos+1; i>0; i--) {
+    if (/[，。？,;\.!\n]/.test(text[i])) {
+      break;
+    }
+  }
+  i = Math.max(i,0);
+  var m = text.substring(i+1).match(/^.*?[，。？,;\.!\n]/);
+  if (m !== null) {
+    var sentence = m[0]
+    var ptree = parse(sentence, function(ptree) {
+      watchBox.innerHTML = ptree.join(' ')
+    });
+/*    
+    var mtSentence = mt(sentence, function(mtSentence) {
+      watchBox.innerHTML = mtSentence
+    });
+*/
+  }
+  return pos;
+}
+
+function sourceCursor() {
+   cursorMove(sourceBox);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  sourceBox.addEventListener('click', sourceCursor, false)
+  sourceBox.addEventListener('keyup', sourceCursor, false)
+  sourceBox.addEventListener('focus', sourceCursor, false)
+})
+
+</script>
+</body>
+</html>
+
+<!--
+
+小明 和 小英:N 一起吃蘋果。
+小明有5個蘋果，給了小華3個蘋果，請問他還剩幾個蘋果？
+黑黑的天，大大的風，爸爸去捕魚，為甚麼 還 不 回 家？
+John:N 與 瑪莉:N 是 一 對 戀人。
+風與日。風日爭，旅人至，脫者勝，風狂吹，人緊衣，風敗，日暖照，人脫衣，日勝。
+蘋果 了 了 香蕉 吃 。
+蘋果 和 香蕉 吃 。
+無色的綠觀念熱烈興奮地睡着。
+-->
